@@ -6,6 +6,8 @@ import com.dauphine.blogger.exceptions.CategoryNotFoundByIdException;
 import com.dauphine.blogger.models.Category;
 import com.dauphine.blogger.services.CategoryService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -59,8 +61,9 @@ public class CategoryController {
             @ApiResponse(responseCode = "400", description = "Server couldn't process the request due to a client error"),
             @ApiResponse(responseCode = "500", description = "Server encountered an unexpected exception")
     })
-    public ResponseEntity<Category> createCategory(@RequestBody CreationCategoryRequest request) {
-        Category created = categoryService.createCategory(request.getId(), request.getName());
+    public ResponseEntity<Category> createCategory(
+            @RequestParam String name) {
+        Category created = categoryService.createCategory(name);
         return ResponseEntity.status(201).body(created);
     }
 
@@ -73,7 +76,7 @@ public class CategoryController {
     })
     public ResponseEntity<Category> updateCategory(
             @PathVariable UUID id,
-            @RequestBody UpdateCategoryRequest request) throws CategoryNotFoundByIdException {
+            @org.springframework.web.bind.annotation.RequestBody UpdateCategoryRequest request) throws CategoryNotFoundByIdException {
         return ResponseEntity.ok(categoryService.updateCategory(id, request.getName()));
     }
 
