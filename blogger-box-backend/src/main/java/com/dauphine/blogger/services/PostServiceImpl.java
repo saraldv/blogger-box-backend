@@ -1,6 +1,6 @@
 package com.dauphine.blogger.services;
 
-import com.dauphine.blogger.exceptions.EntityNotFoundException;
+import com.dauphine.blogger.exceptions.PostNotFoundByIdException;
 import com.dauphine.blogger.models.Category;
 import com.dauphine.blogger.models.Post;
 import com.dauphine.blogger.repositories.PostRepository;
@@ -28,14 +28,14 @@ public class PostServiceImpl implements PostService {
     }
 
     @Override
-    public List<Post> getAllByTitle(String title) {
-        return repository.findAllByTitleContainingIgnoreCase(title);
+    public List<Post> getAllByTitleOrContent(String value) {
+        return repository.findAllByTitleOrContent(value);
     }
 
     @Override
     public Post getPostById(UUID id) {
         return repository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Post", id));
+                .orElseThrow(() -> new PostNotFoundByIdException(id));
     }
 
     @Override

@@ -2,9 +2,14 @@ package com.dauphine.blogger.controllers;
 
 import com.dauphine.blogger.dto.CreationCategoryRequest;
 import com.dauphine.blogger.dto.UpdateCategoryRequest;
+import com.dauphine.blogger.exceptions.CategoryNotFoundByIdException;
 import com.dauphine.blogger.models.Category;
 import com.dauphine.blogger.services.CategoryService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -22,34 +27,64 @@ public class CategoryController {
     }
 
     @GetMapping
-    public List<Category> getAllCategories(
+    @Operation(summary = "Get all categories", description = "Retrieve all categories or filter by name")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Request was successful"),
+            @ApiResponse(responseCode = "500", description = "Server encountered an unexpected exception")
+    })
+    public ResponseEntity<List<Category>> getAllCategories(
             @RequestParam(required = false) String name
     ) {
-        if (name != null) {
-            return categoryService.getAllByName(name);
-        }
-        return categoryService.getAllCategories();
+        List<Category> categories = name == null || name.isBlank()
+                ? categoryService.getAllCategories()
+                : categoryService.getAllByName(name);
+        return ResponseEntity.ok(categories);
     }
 
     @GetMapping("/{id}")
-    public Category getCategoryById(@PathVariable UUID id) {
-        return categoryService.getCategoryById(id);
+    @Operation(summary = "Get category by id", description = "Retrieve a category by id")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Request was successful"),
+            @ApiResponse(responseCode = "404", description = "Resource not found"),
+            @ApiResponse(responseCode = "500", description = "Server encountered an unexpected exception")
+    })
+    public ResponseEntity<Category> getCategoryById(@PathVariable UUID id) throws CategoryNotFoundByIdException {
+        return ResponseEntity.ok(categoryService.getCategoryById(id));
     }
 
     @PostMapping
-    public Category createCategory(@RequestBody CreationCategoryRequest request) {
-        return categoryService.createCategory(request.getId(), request.getName());
+    @Operation(summary = "Create a category", description = "Create a new category")
+    @ApiResponses({
+            @ApiResponse(responseCode = "201", description = "Request was successful and a new resource was created"),
+            @ApiResponse(responseCode = "400", description = "Server couldn't process the request due to a client error"),
+            @ApiResponse(responseCode = "500", description = "Server encountered an unexpected exception")
+    })
+    public ResponseEntity<Category> createCategory(@RequestBody CreationCategoryRequest request) {
+        Category created = categoryService.createCategory(request.getId(), request.getName());
+        return ResponseEntity.status(201).body(created);
     }
 
     @PutMapping("/{id}")
-    public Category updateCategory(
+    @Operation(summary = "Update a category", description = "Update an existing category by id")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Request was successful"),
+            @ApiResponse(responseCode = "404", description = "Resource not found"),
+            @ApiResponse(responseCode = "500", description = "Server encountered an unexpected exception")
+    })
+    public ResponseEntity<Category> updateCategory(
             @PathVariable UUID id,
-            @RequestBody UpdateCategoryRequest request) {
-        return categoryService.updateCategory(id, request.getName());
+            @RequestBody UpdateCategoryRequest request) throws CategoryNotFoundByIdException {
+        return ResponseEntity.ok(categoryService.updateCategory(id, request.getName()));
     }
 
     @DeleteMapping("/{id}")
-    public boolean deleteCategory(@PathVariable UUID id) {
-        return categoryService.deleteCategory(id);
+    @Operation(summary = "Delete a category", description = "Delete a category by id")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Request was successful"),
+            @ApiResponse(responseCode = "404", description = "Resource not found"),
+            @ApiResponse(responseCode = "500", description = "Server encountered an unexpected exception")
+    })
+    public ResponseEntity<Boolean> deleteCategory(@PathVariable UUID id) throws CategoryNotFoundByIdException {
+        return ResponseEntity.ok(categoryService.deleteCategory(id));
     }
 }

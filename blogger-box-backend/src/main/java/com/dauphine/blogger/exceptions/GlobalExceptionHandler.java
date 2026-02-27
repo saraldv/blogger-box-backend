@@ -1,38 +1,40 @@
 package com.dauphine.blogger.exceptions;
 
-import org.springframework.http.HttpStatus;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.Map;
-
-@RestControllerAdvice
+@ControllerAdvice
 public class GlobalExceptionHandler {
 
-    @ExceptionHandler(RuntimeException.class)
-    public ResponseEntity<Map<String, Object>> handleRuntimeException(RuntimeException ex) {
-        return buildResponse(HttpStatus.INTERNAL_SERVER_ERROR, ex.getMessage());
-    }
+    private static final Logger logger = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
-    @ExceptionHandler(EntityNotFoundException.class)
-    public ResponseEntity<Map<String, Object>> handleEntityNotFoundException(EntityNotFoundException ex) {
-        return buildResponse(HttpStatus.NOT_FOUND, ex.getMessage());
+    @ExceptionHandler({
+            CategoryNotFoundByIdException.class,
+            PostNotFoundByIdException.class
+    })
+    public ResponseEntity<String> handleNotFoundException(Exception ex) {
+        logger.warn("[NOT FOUND] {}", ex.getMessage());
+        return ResponseEntity
+                .status(404)
+                .body(ex.getMessage());
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<Map<String, Object>> handleIllegalArgumentException(IllegalArgumentException ex) {
-        return buildResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
+    public ResponseEntity<String> handleBadRequestException(Exception ex) {
+        logger.warn("[BAD REQUEST] {}", ex.getMessage());
+        return ResponseEntity
+                .status(400)
+                .body(ex.getMessage());
     }
 
-    private ResponseEntity<Map<String, Object>> buildResponse(HttpStatus status, String message) {
-        Map<String, Object> body = new HashMap<>();
-        body.put("timestamp", LocalDateTime.now());
-        body.put("status", status.value());
-        body.put("error", status.getReasonPhrase());
-        body.put("message", message);
-        return ResponseEntity.status(status).body(body);
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<String> handleInternalException(Exception ex) {
+        logger.error("[INTERNAL ERROR] {}", ex.getMessage());
+        return ResponseEntity
+                .status(500)
+                .body(ex.getMessage());
     }
 }
